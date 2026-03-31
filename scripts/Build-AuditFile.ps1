@@ -6,7 +6,7 @@ param(
     [string]$InputFile,
 
     [Parameter(Mandatory = $false)]
-    [string]$OutputFile = "C:\M365CopilotReport\Copilot_Events.csv"
+    [string]$OutputFile = "Copilot_Events.csv"
 )
 
 if (-not (Test-Path $InputFile -PathType Leaf)) {
@@ -21,8 +21,7 @@ if ($Records.Count -eq 0) {
     exit
 }
 
-# Remove any duplicate records and make sure that everything is sorted in date order
-$Records = $Records | Sort-Object Identity -Unique
+# Make sure that everything is sorted in date order
 $Records = $Records | Sort-Object {$_.CreationDate -as [datetime]}
 
 Write-Host ("{0} Copilot audit records found. Now analyzing the content" -f $Records.Count)
@@ -61,7 +60,7 @@ ForEach ($Rec in $Records) {
 
     If ($AuditData.copiloteventdata.contexts.id -like "*https://teams.microsoft.com/*") {
         $CopilotApp = "Teams"
-    } ElseIf ($AuditData.CopiloteventData.AppHost -eq "bizchat") {
+    } ElseIf ($AuditData.CopiloteventData.AppHost -eq "bizchat" -or $AuditData.AppIdentity -like "*Bizchat*") {
         $CopilotApp = "Copilot for M365 Chat"
     } ElseIf ($AuditData.CopiloteventData.AppHost -eq "Outlook") {
         $CopilotApp = "Outlook"
@@ -103,8 +102,8 @@ ForEach ($Rec in $Records) {
         $Timestamp = Get-Date $Rec.CreationDate -Format "dd-MMM-yyyy HH:mm:ss"
     }
 
-    # Use UserId from AuditData JSON, fall back to the CSV's UserIds column
-    $User = if ($AuditData.UserId) { $AuditData.UserId } else { $Rec.UserIds }
+    # Use UserId from AuditData JSON, fall back to the CSV's UserId column
+    $User = if ($AuditData.UserId) { $AuditData.UserId } else { $Rec.UserId }
 
     $ReportLine = [PSCustomObject][Ordered]@{
         TimeStamp                     = $Timestamp
