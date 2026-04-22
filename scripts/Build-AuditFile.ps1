@@ -22,7 +22,7 @@ if ($Records.Count -eq 0) {
 }
 
 # Make sure that everything is sorted in date order
-$Records = $Records | Sort-Object {$_.CreationDate -as [datetime]}
+$Records = $Records | Sort-Object { $_.CreationDate -as [datetime] }
 
 Write-Host ("{0} Copilot audit records found. Now analyzing the content" -f $Records.Count)
 
@@ -60,30 +60,45 @@ ForEach ($Rec in $Records) {
 
     If ($AuditData.copiloteventdata.contexts.id -like "*https://teams.microsoft.com/*") {
         $CopilotApp = "Teams"
-    } ElseIf ($AuditData.CopiloteventData.AppHost -eq "bizchat" -or $AuditData.AppIdentity -like "*Bizchat*") {
+    }
+    ElseIf ($AuditData.CopiloteventData.AppHost -eq "bizchat" -or $AuditData.AppIdentity -like "*Bizchat*") {
         $CopilotApp = "Copilot for M365 Chat"
-    } ElseIf ($AuditData.CopiloteventData.AppHost -eq "Outlook") {
+    }
+    ElseIf ($AuditData.CopiloteventData.AppHost -eq "Outlook") {
         $CopilotApp = "Outlook"
-    } ElseIf ($AuditData.CopiloteventData.AppHost -eq "Copilot Studio") {
+    }
+    ElseIf ($AuditData.CopiloteventData.AppHost -eq "Copilot Studio") {
         $CopilotApp = "Copilot Studio Agent"
     }
 
     If ($AuditData.copiloteventdata.contexts.id) {
         $Context = $AuditData.copiloteventdata.contexts.id
-    } ElseIf ($AuditData.copiloteventdata.threadid) {
+    }
+    ElseIf ($AuditData.copiloteventdata.threadid) {
         $Context = $AuditData.copiloteventdata.threadid
     }
 
+    $AgentName = ""
+    if ($CopilotApp -eq "Copilot Studio Agent" -and $AuditData.AppIdentity -match '.*_(.+?)$') {
+        $AgentName = $Matches[1]
+    }
+    elseif ($CopilotApp -eq "Copilot Studio Agent" -and $AuditData.AppIdentity -match '.*-(.+?)$') {
+        $AgentName = $Matches[1]
+    }   
+
     If ($AuditData.copiloteventdata.contexts.id -like "*/sites/*") {
         $CopilotLocation = "SharePoint Online"
-    } ElseIf ($AuditData.copiloteventdata.contexts.id -like "*https://teams.microsoft.com/*") {
+    }
+    ElseIf ($AuditData.copiloteventdata.contexts.id -like "*https://teams.microsoft.com/*") {
         $CopilotLocation = "Teams"
         If ($AuditData.copiloteventdata.contexts.id -like "*ctx=channel*") {
             $CopilotLocation = "Teams Channel"
-        } Else {
+        }
+        Else {
             $CopilotLocation = "Teams Chat"
         }
-    } ElseIf ($AuditData.copiloteventdata.contexts.id -like "*/personal/*") {
+    }
+    ElseIf ($AuditData.copiloteventdata.contexts.id -like "*/personal/*") {
         $CopilotLocation = "OneDrive for Business"
     }
 
@@ -98,7 +113,8 @@ ForEach ($Rec in $Records) {
     $Timestamp = $null
     if ($AuditData.CreationTime) {
         $Timestamp = Get-Date $AuditData.CreationTime -Format "dd-MMM-yyyy HH:mm:ss"
-    } elseif ($Rec.CreationDate) {
+    }
+    elseif ($Rec.CreationDate) {
         $Timestamp = Get-Date $Rec.CreationDate -Format "dd-MMM-yyyy HH:mm:ss"
     }
 
@@ -114,6 +130,7 @@ ForEach ($Rec in $Records) {
         'Accessed Resources'          = $AccessedResources
         'Accessed Resource Locations' = $AccessedResourceLocations
         Action                        = $AccessedResourceActions
+        AgentName                     = $AgentName
     }
     $Report.Add($ReportLine)
 }
