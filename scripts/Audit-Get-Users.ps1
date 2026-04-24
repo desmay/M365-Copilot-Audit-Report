@@ -22,5 +22,5 @@ catch {
 
 # CSV File path  
 $csvUserspath = "C:\M365CopilotReport\Copilot_Users.csv"
-Get-MgUser -Filter "assignedLicenses/any(x:x/skuId eq $('be936ece-5b91-4517-b61d-d87a525bbd9f'))" -ConsistencyLevel eventual -CountVariable CopilotLicensedUserCount -All -Property DisplayName, UserPrincipalName, jobTitle, Department, City, Country, UsageLocation | Select-Object DisplayName, UserPrincipalName, jobTitle, Department, City, Country, UsageLocation | Export-csv $csvUserspath -NoTypeInformation
+Get-MgUser -Filter "assignedLicenses/any(x:x/skuId eq $('be936ece-5b91-4517-b61d-d87a525bbd9f'))" -ConsistencyLevel eventual -CountVariable CopilotLicensedUserCount -All -Property Id, DisplayName, UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses | Select-Object Id, DisplayName, UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses | Export-csv $csvUserspath -NoTypeInformation
 
