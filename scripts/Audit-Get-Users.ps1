@@ -27,11 +27,13 @@ $csvUserspath = "C:\M365CopilotReport\Copilot_Users.csv"
 # Replace with actual Copilot SKU ID(s) from your tenant
 $copilotSkuIds = "be936ece-5b91-4517-b61d-d87a525bbd9f"
 
-# Get users with job titles and manager details in a single call
-$users = Get-MgUser -Filter "JobTitle ne null" -ConsistencyLevel eventual -CountVariable CopilotLicensedUserCount -All -Property Id, DisplayName, UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager
+# Get users with manager details in a single call
+$users = Get-MgUser -ConsistencyLevel eventual -CountVariable CopilotLicensedUserCount  -All -Property Id, DisplayName,  
+UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager | 
+Where-Object { $_.JobTitle -ne $null }
 
-# Build enriched objects with manager info and license check
-$results = foreach ($user in $users) {
+# Build enriched objects with manager info and license check (only users with a JobTitle)
+$results = foreach ($user in $users | Where-Object { $_.JobTitle }) {
 
     $managerName = ""
     $managerUPN = ""
