@@ -81,7 +81,7 @@ $results = foreach ($user in $usersWithJobTitle) {
 $results | Export-Csv $csvUserspath -NoTypeInformation -Encoding UTF8
 # Fall back to local collection count if Graph count variable isn't returned.
 if (-not $TenantUserCount) {
-    $TenantUserCount = if ($null -ne $users) { $users.Count } else { 0 }
+    $TenantUserCount = if ($null -ne $users) { @($users).Count } else { 0 }
 }
 $copilotLicensedUsers = ($results | Where-Object { $_.HasCopilotLicense }).Count
 Write-Host "Total users in tenant: $TenantUserCount"
