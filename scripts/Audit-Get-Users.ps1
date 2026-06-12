@@ -33,7 +33,7 @@ try {
     UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager -ErrorAction Stop
 }
 catch {
-    Write-Host "Failed to retrieve users from Microsoft Graph. Check authentication, Graph permissions (User.Read.All), and network connectivity. Error: $_"
+    Write-Host "Failed to retrieve users from Microsoft Graph. Check authentication, Graph permissions (User.Read.All), and network connectivity. Error: $($_.Exception.Message)"
     exit 1
 }
 
@@ -81,7 +81,7 @@ $results = foreach ($user in $usersWithJobTitle) {
 $results | Export-Csv $csvUserspath -NoTypeInformation -Encoding UTF8
 # Fall back to local collection count if Graph count variable isn't returned.
 if (-not $TenantUserCount) {
-    $TenantUserCount = $users.Count
+    $TenantUserCount = if ($null -ne $users) { $users.Count } else { 0 }
 }
 $copilotLicensedUsers = ($results | Where-Object { $_.HasCopilotLicense }).Count
 Write-Host "Total users in tenant: $TenantUserCount"
