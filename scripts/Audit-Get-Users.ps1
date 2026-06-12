@@ -28,8 +28,14 @@ $csvUserspath = "C:\M365CopilotReport\Copilot_Users.csv"
 $copilotSkuIds = "be936ece-5b91-4517-b61d-d87a525bbd9f"
 
 # Get users with manager details in a single call
-$users = Get-MgUser -ConsistencyLevel eventual -CountVariable TenantUserCount -All -Property Id, DisplayName,  
-UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager
+try {
+    $users = Get-MgUser -ConsistencyLevel eventual -CountVariable TenantUserCount -All -Property Id, DisplayName,  
+    UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager -ErrorAction Stop
+}
+catch {
+    Write-Host "Failed to retrieve users from Microsoft Graph: $_"
+    exit
+}
 
 # Build enriched objects with manager info and license check (only users with a JobTitle)
 $usersWithJobTitle = $users | Where-Object { $_.JobTitle }
