@@ -28,12 +28,12 @@ $csvUserspath = "C:\M365CopilotReport\Copilot_Users.csv"
 $copilotSkuIds = "be936ece-5b91-4517-b61d-d87a525bbd9f"
 
 # Get users with manager details in a single call
-$users = Get-MgUser -ConsistencyLevel eventual -CountVariable CopilotLicensedUserCount  -All -Property Id, DisplayName,  
-UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager | 
-Where-Object { $_.JobTitle -ne $null }
+$users = Get-MgUser -ConsistencyLevel eventual -CountVariable TenantUserCount -All -Property Id, DisplayName,  
+UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager
 
 # Build enriched objects with manager info and license check (only users with a JobTitle)
-$results = foreach ($user in $users | Where-Object { $_.JobTitle }) {
+$usersWithJobTitle = $users | Where-Object { $_.JobTitle }
+$results = foreach ($user in $usersWithJobTitle) {
 
     $managerName = ""
     $managerUPN = ""
@@ -73,4 +73,11 @@ $results = foreach ($user in $users | Where-Object { $_.JobTitle }) {
 
 # Export to CSV
 $results | Export-Csv $csvUserspath -NoTypeInformation -Encoding UTF8
+if (-not $TenantUserCount) {
+    $TenantUserCount = $users.Count
+}
+$copilotLicensedUsers = ($results | Where-Object { $_.HasCopilotLicense }).Count
+Write-Host "Total users in tenant: $TenantUserCount"
+Write-Host "Users with JobTitle exported: $($results.Count)"
+Write-Host "Users with Copilot license: $copilotLicensedUsers"
 Write-Host "Report exported to $csvUserspath"
