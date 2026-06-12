@@ -28,12 +28,18 @@ $csvUserspath = "C:\M365CopilotReport\Copilot_Users.csv"
 $copilotSkuIds = "be936ece-5b91-4517-b61d-d87a525bbd9f"
 
 # Get users with manager details in a single call
-$users = Get-MgUser -ConsistencyLevel eventual -CountVariable CopilotLicensedUserCount  -All -Property Id, DisplayName,  
-UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager | 
-Where-Object { $_.JobTitle -ne $null }
+try {
+    $users = Get-MgUser -ConsistencyLevel eventual -CountVariable TenantUserCount -All -Property Id, DisplayName,  
+    UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager -ErrorAction Stop
+}
+catch {
+    Write-Host "Failed to retrieve users from Microsoft Graph. Check authentication, Graph permissions (User.Read.All), and network connectivity. Error: $($_.Exception.Message)"
+    exit 1
+}
 
 # Build enriched objects with manager info and license check (only users with a JobTitle)
-$results = foreach ($user in $users | Where-Object { $_.JobTitle }) {
+$usersWithJobTitle = $users | Where-Object { $_.JobTitle }
+$results = foreach ($user in $usersWithJobTitle) {
 
     $managerName = ""
     $managerUPN = ""
@@ -73,4 +79,12 @@ $results = foreach ($user in $users | Where-Object { $_.JobTitle }) {
 
 # Export to CSV
 $results | Export-Csv $csvUserspath -NoTypeInformation -Encoding UTF8
+# Fall back to local collection count if Graph count variable isn't returned.
+if (-not $TenantUserCount) {
+    $TenantUserCount = if ($null -ne $users) { @($users).Count } else { 0 }
+}
+$copilotLicensedUsers = ($results | Where-Object { $_.HasCopilotLicense }).Count
+Write-Host "Total users in tenant: $TenantUserCount"
+Write-Host "Users with JobTitle exported: $($results.Count)"
+Write-Host "Users with Copilot license: $copilotLicensedUsers"
 Write-Host "Report exported to $csvUserspath"
