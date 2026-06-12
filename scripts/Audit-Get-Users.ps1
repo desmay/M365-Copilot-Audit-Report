@@ -33,8 +33,8 @@ try {
     UserPrincipalName, JobTitle, Department, City, Country, UsageLocation, AssignedLicenses, manager -ExpandProperty manager -ErrorAction Stop
 }
 catch {
-    Write-Host "Failed to retrieve users from Microsoft Graph: $_"
-    exit
+    Write-Host "Failed to retrieve users from Microsoft Graph. Check authentication, Graph permissions (User.Read.All), and network connectivity. Error: $_"
+    exit 1
 }
 
 # Build enriched objects with manager info and license check (only users with a JobTitle)
@@ -79,6 +79,7 @@ $results = foreach ($user in $usersWithJobTitle) {
 
 # Export to CSV
 $results | Export-Csv $csvUserspath -NoTypeInformation -Encoding UTF8
+# Fall back to local collection count if Graph count variable isn't returned.
 if (-not $TenantUserCount) {
     $TenantUserCount = $users.Count
 }
