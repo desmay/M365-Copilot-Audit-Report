@@ -26,7 +26,7 @@ try {
 }
 
 #Modify the values for the following variables to configure the audit log search.
-$logFile = "/Users/dereksmay/Downloads/AuditScriptLog.txt"
+$logFile = "/Users/dereksmay/AuditScriptLog.txt"
 $outputFile = "/Users/dereksmay/Copilot_Events.csv"
 If(Test-Path $outputFile -PathType Leaf)
     {

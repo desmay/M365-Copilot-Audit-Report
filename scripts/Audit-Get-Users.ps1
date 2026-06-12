@@ -21,11 +21,12 @@ catch {
 }
 
 # CSV File path  
-$csvUserspath = "C:\M365CopilotReport\Copilot_Users.csv"
+$csvUserspath = "/Users/dereksmay/code/M365-Copilot-Audit-Report/scripts/Copilot_Users.csv"
 
 
 # Replace with actual Copilot SKU ID(s) from your tenant
 $copilotSkuIds = "be936ece-5b91-4517-b61d-d87a525bbd9f"
+$copilotSkuIds = 'b529eafb-839c-4fd3-adf5-dfe02fa5dcb2'
 
 # Get users with manager details in a single call
 $users = Get-MgUser -ConsistencyLevel eventual -CountVariable CopilotLicensedUserCount  -All -Property Id, DisplayName,  
